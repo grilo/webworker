@@ -14,6 +14,8 @@ class Message(object):
 
     def __init__(self, from_addr, to_addr, subject='', body='No message.', smtp_host='localhost', smtp_port=25):
         self.from_addr = from_addr
+        if not ',' in to_addr:
+            to_addr = [to_addr]
         self.to_addr = to_addr
         self.subject = subject
         self.body = body

@@ -11,15 +11,35 @@ import task
 import mail
 
 
-manager = task.Manager()
+def run_inspection(files):
+    logging.info('Starting inspection task...')
+
+    sca = '/opt/fortify/bin/sourceanalyzer'
+    scandir = '/tmp'/
+
+    clean = """{sca} -b {scandir} -clean""".format(sca=sca, scandir=scandir)
+    task.Task(clean).wait()
+
+    gen = """{sca} -b {scandir} -jdk 1.5 -exclude REPORTING/* -classpath""".format(sca=sca, scandir=scandir)
+    task.Task(gen).wait()
+
+    scan = """{sca} -b {scandir} -scan  -f {report}""".format(sca=sca, scandir=scandir, report='report')
+    task.Task(scan).wait()
+
+    upload = """/opt/fortify/bin/fortifyclient downloadFPR -file""""
+    task.Task(upload).wait()
+
+    m = mail.Message('jenkins-no-reply@ingdirect.es', 'joao.grilo@gmail.com', 'subject', 'body', 'localhost', 25)
+    print m.build_mail()
+
 
 @bottle.get('/fortify')
 @bottle.get('/fortify/<item>')
 def get(item=None):
     tasks = ""
-    for t in manager.running_tasks():
+    for p in pool._pool:
         tasks += "<li>"
-        tasks += "({pid}) {cmd}".format(pid=t.pid, cmd=t.command)
+        tasks += "({pid}) {cmd}".format(pid=p.pid, cmd=p.name)
         tasks += "</li>\n"
 
     return utils.tpl('listfortifytasks', {'tasks': tasks})
@@ -44,11 +64,6 @@ def delete(pid=None):
 def post():
     bottle.response.content_type = 'application/json'
     bottle.response.status = 200
-    p = mp.Process(target=f, args=(files,))
+    files = bottle.request.json
+    mp.Process(target=run_inspection, args=(files,)).start()
     return None
-
-def run_inspection(files):
-    task = Task('sleep 30')
-    task.wait()
-    mail.Message('jenkins-no-reply@ingdirect.es', 'joao.grilo@gmail.com', 'subject', 'body', 'localhost', 25)
-    print mail.build_mail()

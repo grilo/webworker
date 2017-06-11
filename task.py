@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import logging
 import subprocess
 import shlex
 
@@ -15,8 +16,11 @@ class Task(object):
         self.pid = None
 
     def wait(self):
+        if not self._proc:
+            self.start()
         self._out, self._rc = self._proc.communicate()
         self._rc = self._proc.returncode
+        logging.debug('Finished process (%i): %s', self.pid, self.command)
         return self._rc, self._out, self._err
 
     def __getattr__(self, key):
@@ -31,6 +35,7 @@ class Task(object):
                     stderr=subprocess.PIPE, \
                     universal_newlines=True)
         self.pid = self._proc.pid
+        logging.debug('Started process (%i): %s', self.pid, self.command)
         return self.pid
 
     def stop(self):
@@ -44,30 +49,3 @@ class Task(object):
             return True
         self.wait()
         return False
-
-
-class Manager(object):
-
-    def __init__(self):
-        self.tasks = {}
-
-    def add_task(self, command):
-        t = Task(command)
-        self.tasks[t.start()] = t
-
-    def _cleanup(self):
-        running = self.tasks.values()
-        for task in running:
-            if not task.is_alive():
-                del self.tasks[task.pid]
-
-    def running_tasks(self):
-        self._cleanup()
-        return self.tasks.values()
-
-if __name__ == '__main__':
-    m = Manager()
-    m.add_task('echo "hello world"')
-    print m.running_tasks()
-
-    print m.running_tasks()[0].wait()
