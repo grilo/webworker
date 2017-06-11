@@ -32,15 +32,9 @@ if __name__ == '__main__':
         logging.getLogger().setLevel(logging.DEBUG)
         logging.debug('Verbose mode activated.')
 
-    app = bottle.Bottle()
-
     # Dynamically load all modules
     for inspector in utils.load_inspectors():
-        route_path = '/' + inspector.__name__
-        verbs = ['GET', 'POST', 'PUT', 'DELETE']
-        for verb in verbs:
-            if hasattr(inspector, verb):
-                app.route(route_path, verb, getattr(inspector, verb))
-                app.route(route_path + '/<item>', verb, getattr(inspector, verb))
+        logging.info('Loaded inspector: %s', inspector.__name__)
 
-    app.run(host=args.host, port=args.port, debug=args.verbose, reloader=args.verbose)
+    # Use the default application, makes everything simpler
+    bottle.run(host=args.host, port=args.port, debug=args.verbose, reloader=args.verbose)
