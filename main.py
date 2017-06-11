@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-v', '--verbose', action='store_true', \
         help='Increase output verbosity')
-    parser.add_argument('-t', '--host', default='localhost', \
+    parser.add_argument('-t', '--host', default='0.0.0.0', \
         help='The host where the application will listen in.')
     parser.add_argument('-p', '--port', default='8080', \
         help='The port where the web server will listen to.')

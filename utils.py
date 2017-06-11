@@ -4,6 +4,8 @@ import os
 import sys
 import re
 import logging
+import subprocess
+import shlex
 
 def load_module(path):
     """Load a python module."""
@@ -48,3 +50,13 @@ def tpl(template, options):
 
     with open(tpl_path, 'r') as tpl:
         return tpl.read().format(**options)
+
+def cmd(command):
+    proc = subprocess.Popen(shlex.shlex(command), \
+                stdout=subprocess.PIPE, \
+                stderr=subprocess.PIPE)
+
+    out, err = proc.communicate()
+    rc = proc.returncode
+
+    return rc, out, err
